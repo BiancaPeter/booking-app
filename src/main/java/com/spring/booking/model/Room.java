@@ -20,7 +20,7 @@ public class Room {
     @Column
     private Integer numberOfPerson;
 
-    @OneToMany(mappedBy = "room",cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @OneToMany(mappedBy = "room",cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE})
     private List<RoomReservation> reservationList;
 
     @ManyToOne

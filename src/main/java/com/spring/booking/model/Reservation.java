@@ -24,7 +24,7 @@ public class Reservation {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @OneToMany(mappedBy = "reservation",cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @OneToMany(mappedBy = "reservation",cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE})
     private List<RoomReservation> reservationList;
 
     public Reservation(){}
