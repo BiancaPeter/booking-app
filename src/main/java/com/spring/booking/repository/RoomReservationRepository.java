@@ -13,4 +13,6 @@ public interface RoomReservationRepository extends JpaRepository<RoomReservation
 
 
     //List<RoomReservation>deleteAllByRoom_Id(Long roomId);
+
+
 }

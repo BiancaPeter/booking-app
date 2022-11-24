@@ -7,8 +7,6 @@ import java.util.List;
 
 public class AddReservationDTO {
 
-    private Long userId;
-
     private List<Long> roomIds;
 
     private LocalDateTime checkIn;
@@ -16,19 +14,10 @@ public class AddReservationDTO {
     private LocalDateTime checkOut;
 
 
-    public AddReservationDTO(Long userId, List<Long> roomIds, LocalDateTime checkIn, LocalDateTime checkOut) {
-        this.userId = userId;
+    public AddReservationDTO(List<Long> roomIds, LocalDateTime checkIn, LocalDateTime checkOut) {
         this.roomIds = roomIds;
         this.checkIn = checkIn;
         this.checkOut = checkOut;
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
     }
 
     public List<Long> getRoomIds() {

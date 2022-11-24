@@ -1,6 +1,7 @@
 package com.spring.booking.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import javax.persistence.*;
 import java.util.List;
@@ -21,10 +22,11 @@ public class Room {
     private Integer numberOfPerson;
 
     @OneToMany(mappedBy = "room",cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE})
-    private List<RoomReservation> reservationList;
+    @JsonManagedReference(value="room-roomreservation")
+    private List<RoomReservation> roomReservationList;
 
     @ManyToOne
-    @JsonBackReference
+    @JsonBackReference(value = "hotel-room")
     @JoinColumn(name="hotel_id")
     private Hotel hotel;
 
@@ -58,12 +60,12 @@ public class Room {
         this.numberOfPerson = numberOfPerson;
     }
 
-    public List<RoomReservation> getReservationList() {
-        return reservationList;
+    public List<RoomReservation> getRoomReservationList() {
+        return roomReservationList;
     }
 
-    public void setReservationList(List<RoomReservation> reservationList) {
-        this.reservationList = reservationList;
+    public void setRoomReservationList(List<RoomReservation> reservationList) {
+        this.roomReservationList = reservationList;
     }
 
     public Hotel getHotel() {

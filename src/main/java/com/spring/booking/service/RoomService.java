@@ -2,10 +2,8 @@ package com.spring.booking.service;
 
 import com.spring.booking.model.Hotel;
 import com.spring.booking.model.Room;
-import com.spring.booking.model.RoomReservation;
 import com.spring.booking.repository.HotelRepository;
 import com.spring.booking.repository.RoomRepository;
-import com.spring.booking.repository.RoomReservationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -40,7 +38,7 @@ public class RoomService {
 
         Hotel foundHotel = hotelRepository.findById(hotelId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "hotel not found"));
         Room foundRoom = roomRepository.findById(roomId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "room not found"));
-        foundRoom.getReservationList().clear();
+        foundRoom.getRoomReservationList().clear();
         foundHotel.getRoomList().remove(foundRoom);
         roomRepository.save(foundRoom);
     }

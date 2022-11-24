@@ -16,7 +16,7 @@ public class Hotel {
     private String name;
 
     @OneToMany(mappedBy = "hotel", cascade = CascadeType.ALL)
-    @JsonManagedReference
+    @JsonManagedReference(value = "hotel-room")
     private List<Room> roomList;
 
     public Hotel() {

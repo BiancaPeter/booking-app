@@ -1,6 +1,8 @@
 package com.spring.booking.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -12,12 +14,12 @@ public class RoomReservation {
     private Long id;
 
     @ManyToOne
-    @JsonIgnore
+    @JsonBackReference(value = "room-roomreservation")
     @JoinColumn(name="room_id")
     private Room room;
 
     @ManyToOne
-    @JsonIgnore
+    @JsonBackReference(value="reservation-roomreservation")
     @JoinColumn(name="reservation_id")
     private Reservation reservation;
 
