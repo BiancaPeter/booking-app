@@ -7,7 +7,7 @@ import javax.persistence.*;
 import java.util.List;
 
 @Entity
-public class Room {
+public class Room implements Comparable<Room> {
     @Id
     @GeneratedValue
     private Long id;
@@ -31,6 +31,11 @@ public class Room {
     private Hotel hotel;
 
     public Room(){}
+
+    @Override
+    public int compareTo(Room anotherRoom) {
+        return Integer.compare(price, anotherRoom.getPrice());
+    }
 
     public Long getId() {
         return id;

@@ -1,6 +1,7 @@
 package com.spring.booking.controller;
 
 import com.spring.booking.DTO.AddReservationDTO;
+import com.spring.booking.DTO.AvailabilityOfHotelRoomsDTO;
 import com.spring.booking.DTO.GetAvailabilityDTO;
 import com.spring.booking.model.Reservation;
 import com.spring.booking.model.Room;
@@ -26,9 +27,22 @@ public class ReservationController {
     public Reservation addReservation(@RequestBody AddReservationDTO addReservationDTO){
         return reservationService.addReservation(addReservationDTO);
     }
-    @GetMapping("/availability/")
+    @GetMapping("/availability")
     public List<Room> getAvailableRooms(@RequestBody GetAvailabilityDTO getAvailabilityDTO){
         //1. de facut un DTO ca sa prindem informatiile startDate, endDate, numberOfpersons
         return reservationService.getAvailableRooms(getAvailabilityDTO.getStartDate(), getAvailabilityDTO.getEndDate(), getAvailabilityDTO.getNumberOfPersons());
+    }
+    @GetMapping("/numberOfAvailableRooms")
+    public Integer getNumberOfAvailableRooms(@RequestBody AvailabilityOfHotelRoomsDTO availabilityOfHotelRoomsDTO){
+        return reservationService.getNumberOfAvailableRooms(availabilityOfHotelRoomsDTO.getStartDate(), availabilityOfHotelRoomsDTO.getEndDate(), availabilityOfHotelRoomsDTO.getIdHotel());
+    }
+    @GetMapping("/priceForAllReservations")
+    public long getPriceForAllReservationsBetween(@RequestBody AvailabilityOfHotelRoomsDTO availabilityOfHotelRoomsDTO) {
+        return reservationService.getPriceForAllReservationsBetween(availabilityOfHotelRoomsDTO.getStartDate(), availabilityOfHotelRoomsDTO.getEndDate(), availabilityOfHotelRoomsDTO.getIdHotel());
+    }
+
+    @GetMapping("/availableRoomsOrderedByPrice")
+    public List<Room> getAvailableRoomsOrderedByPrice(@RequestBody GetAvailabilityDTO getAvailabilityDTO) {
+        return reservationService.getAvailableRoomsOrderedByPriceBy(getAvailabilityDTO.getStartDate(), getAvailabilityDTO.getEndDate(), getAvailabilityDTO.getNumberOfPersons());
     }
 }

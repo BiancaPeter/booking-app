@@ -35,6 +35,8 @@ public class JwtSecurityConfig {
                 .authorizeRequests()
                 .antMatchers("/authenticate").permitAll()
                 .antMatchers("/register").permitAll()
+                .antMatchers("/hotel/add").hasRole("ADMIN")
+                .antMatchers("/room/**").hasRole("ADMIN")
                 .antMatchers("/reservation/**").hasAnyRole("CLIENT", "ADMIN")
                 .anyRequest().authenticated()
                 .and()
