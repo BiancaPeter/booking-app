@@ -18,6 +18,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ReservationService {
@@ -37,15 +38,14 @@ public class ReservationService {
         this.hotelRepository = hotelRepository;
     }
 
-
     public Reservation addReservation(AddReservationDTO addReservationDTO) {
         UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User foundUser = userRepository.findUserByUsername(userDetails.getUsername()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "user not found"));
 
         //verificam daca datele noastre interfereaza cu vreuna din rezervarile pentru fiecare camera
-                //presupun ca lista contine doar camere diponibile
-                //parcurg lista de camere din baza de date
-                //daca o camera din lista de camere, pe care doresc sa le rezerv, nu e disponibila atunci rezervarea nu se va realiza
+        //presupun ca lista contine doar camere diponibile
+        //parcurg lista de camere din baza de date
+        //daca o camera din lista de camere, pe care doresc sa le rezerv, nu e disponibila atunci rezervarea nu se va realiza
         List<Room> foundRooms = roomRepository.findAllById(addReservationDTO.getRoomIds());
         boolean areAvailableRooms = true;
         for (Room room : foundRooms) {
@@ -81,59 +81,57 @@ public class ReservationService {
         //o rezervare interfereaza cu sD si eD daca are checkin intre sD si eD sau daca are checkout intre sD si eD
         //daca nicio rezervare nu interfereaza cu sD si eD pentru camera curenta, adaug camera in lista rezultat (inseamna ca e available)
 
-        List<Room> availableRooms = new ArrayList<>();
+//        List<Room> availableRooms = new ArrayList<>();
         List<Hotel> foundHotels = hotelRepository.findAll();
-        for (Hotel hotel : foundHotels) {
-            for (Room room : hotel.getRoomList()) {
-                if (isAvailableRoom(room, startDate, endDate, numberOfPersons)) {
-                    availableRooms.add(room);
-                }
-            }
-        }
-        return availableRooms;
+//        for (Hotel hotel : foundHotels) {
+//            for (Room room : hotel.getRoomList()) {
+//                if (room.getNumberOfPerson() == numberOfPersons) {
+//                    if (isAvailableRoom(room, startDate, endDate)) {
+//                        availableRooms.add(room);
+//                    }
+//                }
+//            }
+//        }
+//        return availableRooms;
+        return foundHotels.stream()
+                .flatMap(hotel -> hotel.getRoomList().stream())
+                .filter(room -> room.getNumberOfPerson() == numberOfPersons)
+                .filter(room -> isAvailableRoom(room, startDate, endDate))
+                .collect(Collectors.toList());
+
     }
 
-    public boolean isAvailableRoom(Room room, LocalDateTime startDate, LocalDateTime endDate, Integer numberOfPersons) {
-        boolean isAvailable = false;
-        if (room.getNumberOfPerson() == numberOfPersons) {
-            if (room.getRoomReservationList().isEmpty()) {
-                isAvailable = true;
-            } else {
-                for (RoomReservation roomReservation : room.getRoomReservationList()) {
-                    if ((roomReservation.getReservation().getCheckIn().isAfter(endDate) || roomReservation.getReservation().getCheckOut().isBefore(startDate))) {
-                        isAvailable = true;
-                    }
-                }
-            }
-        }
-        return isAvailable;
-    }
-
-    public int getNumberOfAvailableRooms(LocalDateTime startDate, LocalDateTime endDate, Long idHotel) {
-        Hotel foundHotel = hotelRepository.findById(idHotel).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "the hotel was not found"));
-        int numberOfAvailableRooms = 0;
-        for (Room room : foundHotel.getRoomList()) {
-            if (isAvailableRoom(room, startDate, endDate)) {
-                numberOfAvailableRooms++;
-            }
-        }
-        return numberOfAvailableRooms;
-    }
-
-    //am suprascris metoda isAvailableRoom pentru ca vreau sa gasesc camerele disponibile si fara sa tin cont de numarul de persoane care pot fi cazate in camera
     public boolean isAvailableRoom(Room room, LocalDateTime startDate, LocalDateTime endDate) {
-        boolean isAvailable = false;
+
         if (room.getRoomReservationList().isEmpty()) {
-            isAvailable = true;
+            return true;
         } else {
-            for (RoomReservation roomReservation : room.getRoomReservationList()) {
-                if ((roomReservation.getReservation().getCheckIn().isAfter(endDate) || roomReservation.getReservation().getCheckOut().isBefore(startDate))) {
-                    isAvailable = true;
-                }
+            return hasRoomNonInterferingReservations(room, startDate, endDate);
+        }
+    }
+
+    public boolean hasRoomNonInterferingReservations(Room room, LocalDateTime startDate, LocalDateTime endDate) {
+        for (RoomReservation roomReservation : room.getRoomReservationList()) {
+            if (!(roomReservation.getReservation().getCheckIn().isAfter(endDate) || roomReservation.getReservation().getCheckOut().isBefore(startDate))) {
+                return false;
             }
         }
+        return true;
+    }
 
-        return isAvailable;
+    public long getNumberOfAvailableRooms(LocalDateTime startDate, LocalDateTime endDate, Long idHotel) {
+        Hotel foundHotel = hotelRepository.findById(idHotel).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "the hotel was not found"));
+//        int numberOfAvailableRooms = 0;
+//        for (Room room : foundHotel.getRoomList()) {
+//            if (isAvailableRoom(room, startDate, endDate)) {
+//                numberOfAvailableRooms++;
+//            }
+//        }
+//        return numberOfAvailableRooms;
+
+        return foundHotel.getRoomList().stream()
+                .filter(room -> isAvailableRoom(room, startDate, endDate))
+                .count();
     }
 
     public long getPriceForAllReservationsBetween(LocalDateTime startDate, LocalDateTime endDate, Long idHotel) {
@@ -146,6 +144,7 @@ public class ReservationService {
     }
 
     public long getPriceForARoomReservationBetween(Room room, LocalDateTime startDate, LocalDateTime endDate) {
+        long totalNumberOfDaysReserved = 0;
         long numberOfDaysReserved = 0;
         for (RoomReservation roomReservation : room.getRoomReservationList()) {
             //am determinat numarul de zile rezervate aferente unei camere, intr-o anumita perioada data, in functie de
@@ -169,8 +168,10 @@ public class ReservationService {
             if (roomReservation.getReservation().getCheckIn().isBefore(startDate) && (roomReservation.getReservation().getCheckOut().isAfter(startDate) && roomReservation.getReservation().getCheckOut().isBefore(endDate))) {
                 numberOfDaysReserved = ChronoUnit.DAYS.between(startDate, roomReservation.getReservation().getCheckOut());
             }
+            totalNumberOfDaysReserved += numberOfDaysReserved;
+
         }
-        return room.getPrice() * numberOfDaysReserved;
+        return room.getPrice() * totalNumberOfDaysReserved;
     }
 
     public List<Room> getAvailableRoomsOrderedByPriceBy(LocalDateTime startDate, LocalDateTime endDate, Integer numberOfPersons) {
