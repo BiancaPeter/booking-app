@@ -22,9 +22,9 @@ public class RoomController {
         return roomService.addRoom(room, hotelId);
     }
 
-    @DeleteMapping("/delete/{roomId}/{hotelId}")
-    public void deleteRoom(@PathVariable Long roomId, @PathVariable Long hotelId) {
-        roomService.deleteRoomFromHotel(roomId, hotelId);
+    @DeleteMapping("/delete/{roomId}")
+    public void deleteRoom(@PathVariable Long roomId) {
+        roomService.deleteRoom(roomId);
     }
 
     @GetMapping("/getAllRooms/{hotelId}")
