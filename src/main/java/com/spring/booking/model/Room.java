@@ -21,7 +21,7 @@ public class Room implements Comparable<Room> {
     @Column
     private Integer numberOfPerson;
 
-    @OneToMany(mappedBy = "room",cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE})
+    @OneToMany(mappedBy = "room",cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE}, orphanRemoval = true)
     @JsonManagedReference(value="room-roomreservation")
     private List<RoomReservation> roomReservationList;
 

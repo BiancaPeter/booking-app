@@ -15,8 +15,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -42,35 +41,29 @@ public class ReservationService {
         UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User foundUser = userRepository.findUserByUsername(userDetails.getUsername()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "user not found"));
 
-        //verificam daca datele noastre interfereaza cu vreuna din rezervarile pentru fiecare camera
-        //presupun ca lista contine doar camere diponibile
-        //parcurg lista de camere din baza de date
-        //daca o camera din lista de camere, pe care doresc sa le rezerv, nu e disponibila atunci rezervarea nu se va realiza
         List<Room> foundRooms = roomRepository.findAllById(addReservationDTO.getRoomIds());
-        boolean areAvailableRooms = true;
+        if (foundRooms.size() != addReservationDTO.getRoomIds().size()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "one or more of the rooms was not found");
+        }
         for (Room room : foundRooms) {
             if (!isAvailableRoom(room, addReservationDTO.getCheckIn(), addReservationDTO.getCheckOut())) {
-                areAvailableRooms = false;
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "one of the rooms is not avaiable for requested period");
             }
         }
 
-        if (areAvailableRooms) {
-            Reservation reservation = new Reservation();
-            reservation.setCheckIn(addReservationDTO.getCheckIn());
-            reservation.setCheckOut(addReservationDTO.getCheckOut());
-            reservation.setUser(foundUser);
-            addReservationDTO.getRoomIds().forEach(roomId -> {
-                Room currentRoom = roomRepository.findById(roomId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "room not found"));
-                RoomReservation roomReservation = new RoomReservation();
-                roomReservation.setReservation(reservation);
-                roomReservation.setRoom(currentRoom);
-                roomReservation.setDateCreated(LocalDateTime.now());
-                reservation.getRoomReservationList().add(roomReservation);
-            });
-            return reservationRepository.save(reservation);
-        } else {
-            throw new ResponseStatusException(HttpStatus.CREATED, "rooms are not available");
-        }
+        Reservation reservation = new Reservation();
+        reservation.setCheckIn(addReservationDTO.getCheckIn());
+        reservation.setCheckOut(addReservationDTO.getCheckOut());
+        reservation.setUser(foundUser);
+        foundRooms.forEach(currentRoom -> {
+            RoomReservation roomReservation = new RoomReservation();
+            roomReservation.setReservation(reservation);
+            roomReservation.setRoom(currentRoom);
+            roomReservation.setDateCreated(LocalDateTime.now());
+            reservation.getRoomReservationList().add(roomReservation);
+        });
+        return reservationRepository.save(reservation);
+
     }
 
     public List<Room> getAvailableRooms(LocalDateTime startDate, LocalDateTime endDate, Integer numberOfPersons) {
@@ -102,7 +95,6 @@ public class ReservationService {
     }
 
     public boolean isAvailableRoom(Room room, LocalDateTime startDate, LocalDateTime endDate) {
-
         if (room.getRoomReservationList().isEmpty()) {
             return true;
         } else {
@@ -176,9 +168,15 @@ public class ReservationService {
 
     public List<Room> getAvailableRoomsOrderedByPriceBy(LocalDateTime startDate, LocalDateTime endDate, Integer numberOfPersons) {
         List<Room> sortedListOfAvailableRooms = getAvailableRooms(startDate, endDate, numberOfPersons);
-        //OBS: clasa Room implementeaza Comparable<Room>
-        // in clasa Room am suprascris metoda compareTo (aceasta va face comparatia dupa pretul camerei)
-        Collections.sort(sortedListOfAvailableRooms);
-        return sortedListOfAvailableRooms;
+//        //OBS: clasa Room implementeaza Comparable<Room>
+//        // in clasa Room am suprascris metoda compareTo (aceasta va face comparatia dupa pretul camerei)
+//        Collections.sort(sortedListOfAvailableRooms);
+//        return sortedListOfAvailableRooms;
+        if (sortedListOfAvailableRooms.isEmpty() || sortedListOfAvailableRooms == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "no available rooms");
+        }
+        return sortedListOfAvailableRooms.stream()
+                .sorted(Comparator.comparingInt(Room::getPrice))
+                .collect(Collectors.toList());
     }
 }

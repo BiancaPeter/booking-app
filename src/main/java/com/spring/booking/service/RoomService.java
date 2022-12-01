@@ -14,19 +14,20 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 
 @Service
+@Transactional
 public class RoomService {
 
     private RoomRepository roomRepository;
 
     private HotelRepository hotelRepository;
 
-    @Autowired
     private RoomReservationRepository roomReservationRepository;
 
     @Autowired
-    public RoomService(RoomRepository roomRepository, HotelRepository hotelRepository) {
+    public RoomService(RoomRepository roomRepository, HotelRepository hotelRepository,RoomReservationRepository roomReservationRepository) {
         this.roomRepository = roomRepository;
         this.hotelRepository = hotelRepository;
+        this.roomReservationRepository=roomReservationRepository;
     }
 
     public Room addRoom(Room room, Long hotelId) {
@@ -36,13 +37,9 @@ public class RoomService {
         return roomRepository.save(room);
     }
 
-    @Transactional
+
     public void deleteRoom(Long roomId) {
-        //am sters din baza de date toate roomReservation aferente camerei pe care dorim sa o stergem
-        //apoi am sters camera din baza de date
-        //(am folosit @Transactional pt a face doua operatii de stergere din baza de date in aceasi metoda)
         Room foundRoom = roomRepository.findById(roomId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "room not found"));
-        roomReservationRepository.deleteAllByRoom(foundRoom);
         roomRepository.delete(foundRoom);
     }
 
