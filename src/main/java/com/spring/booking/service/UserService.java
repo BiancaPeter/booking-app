@@ -18,13 +18,17 @@ import java.util.Optional;
 public class UserService {
     private UserRepository userRepository;
     private RoleRepository roleRepository;
-    @Autowired
+
+    private RoleService roleService;
+
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    public UserService(UserRepository userRepository, RoleRepository roleRepository) {
+    public UserService(UserRepository userRepository, RoleRepository roleRepository,RoleService roleService,PasswordEncoder passwordEncoder) {
         this.roleRepository = roleRepository;
         this.userRepository = userRepository;
+        this.roleService=roleService;
+        this.passwordEncoder=passwordEncoder;
     }
 
 
@@ -37,11 +41,19 @@ public class UserService {
         user.setUsername(newUser.getUsername());
 
         user.setPassword(passwordEncoder.encode(newUser.getPassword()));
-        Role foundRole = roleRepository.findByRoleType(RoleType.ROLE_CLIENT);
-        user.getRoleList().add(foundRole);
-        foundRole.getUserList().add(user);
+        Role foundRole = roleRepository.findByRoleType(newUser.getRoleType());
+        if (foundRole != null) {
+            setRoleOfUser(user, foundRole);
+        } else if (newUser.getRoleType().equals(RoleType.ROLE_ADMIN) || newUser.getRoleType().equals(RoleType.ROLE_CLIENT)) {
+            Role newRole = roleService.addRole(newUser.getRoleType());
+            setRoleOfUser(user, newRole);
+        }
         return userRepository.save(user);
 
+    }
+    private static void setRoleOfUser(User user, Role role) {
+        user.getRoleList().add(role);
+        role.getUserList().add(user);
     }
 }
 
