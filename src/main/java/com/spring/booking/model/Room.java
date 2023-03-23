@@ -2,6 +2,7 @@ package com.spring.booking.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import io.swagger.annotations.ApiModelProperty;
 
 import javax.persistence.*;
 import java.util.List;
@@ -10,6 +11,7 @@ import java.util.List;
 public class Room implements Comparable<Room> {
     @Id
     @GeneratedValue
+    @ApiModelProperty(hidden = true)
     private Long id;
 
     @Column
@@ -23,11 +25,13 @@ public class Room implements Comparable<Room> {
 
     @OneToMany(mappedBy = "room",cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE}, orphanRemoval = true)
     @JsonManagedReference(value="room-roomreservation")
+    @ApiModelProperty(hidden = true)
     private List<RoomReservation> roomReservationList;
 
     @ManyToOne
     @JsonBackReference(value = "hotel-room")
     @JoinColumn(name="hotel_id")
+    @ApiModelProperty(hidden = true)
     private Hotel hotel;
 
     public Room(){}

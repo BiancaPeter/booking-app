@@ -15,7 +15,7 @@ public class Hotel {
     private Long id;
 
     @Column
-    @ApiModelProperty(notes = "Hotel name", example = "Continental", required = true)
+    //@ApiModelProperty(notes = "Hotel name", example = "Continental", required = true)
     private String name;
 
     @OneToMany(mappedBy = "hotel", cascade = CascadeType.ALL)
